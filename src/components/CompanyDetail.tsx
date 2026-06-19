@@ -1,7 +1,10 @@
+import { useState, useEffect } from 'react';
 import type { CompanyInfo } from '../types/stock';
+import type { HistoryPoint } from '../services/api';
+import { fetchHistory } from '../services/api';
 import { StockChart } from './StockChart';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { X, Users, Calendar, Building2 } from 'lucide-react';
+import { X, Users, Calendar, Building2, RefreshCw } from 'lucide-react';
 import { formatNumber } from './PriceTag';
 
 interface Props {
@@ -10,6 +13,17 @@ interface Props {
 }
 
 export function CompanyDetail({ company, onClose }: Props) {
+  const [history, setHistory] = useState<HistoryPoint[]>(company.priceHistory ?? []);
+  const [histLoading, setHistLoading] = useState(true);
+
+  useEffect(() => {
+    setHistLoading(true);
+    fetchHistory(`${company.code}.KS`)
+      .then(setHistory)
+      .catch(() => {})
+      .finally(() => setHistLoading(false));
+  }, [company.code]);
+
   const totalAnalysts = company.analystRatings.strongBuy + company.analystRatings.buy + company.analystRatings.hold + company.analystRatings.sell;
 
   const revenueData = company.financialHistory.map(y => ({
@@ -45,7 +59,13 @@ export function CompanyDetail({ company, onClose }: Props) {
           {/* Chart */}
           <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
             <div className="text-sm font-medium text-gray-300 mb-3">주가 차트 (6개월)</div>
-            <StockChart data={company.priceHistory} height={220} showAxis={true} />
+            {histLoading ? (
+              <div className="flex items-center justify-center h-[220px] text-gray-500">
+                <RefreshCw size={20} className="animate-spin mr-2" /> 차트 로딩 중...
+              </div>
+            ) : (
+              <StockChart data={history} height={220} showAxis={true} />
+            )}
           </div>
 
           {/* Company Info */}

@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { CompanyInfo } from '../types/stock';
+import type { HistoryPoint } from '../services/api';
+import { fetchHistory } from '../services/api';
 import { StockChart } from '../components/StockChart';
-import { BarChart2, TrendingUp, DollarSign, Percent, Users } from 'lucide-react';
+import { BarChart2, TrendingUp, DollarSign, Percent, Users, RefreshCw } from 'lucide-react';
 import { formatNumber } from '../components/PriceTag';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Tooltip } from 'recharts';
 
@@ -36,7 +38,18 @@ function ScoreRadar({ company }: { company: CompanyInfo }) {
 
 export function AnalysisPage({ companies, onCompanyClick }: Props) {
   const [selected, setSelected] = useState<string>(companies[0]?.code || '');
+  const [history, setHistory] = useState<HistoryPoint[]>([]);
+  const [histLoading, setHistLoading] = useState(false);
   const company = companies.find(c => c.code === selected) || companies[0];
+
+  useEffect(() => {
+    if (!company) return;
+    setHistLoading(true);
+    fetchHistory(`${company.code}.KS`)
+      .then(setHistory)
+      .catch(() => setHistory([]))
+      .finally(() => setHistLoading(false));
+  }, [company?.code]);
 
   if (!company) return null;
 
@@ -91,7 +104,13 @@ export function AnalysisPage({ companies, onCompanyClick }: Props) {
 
           <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
             <div className="text-sm font-medium text-gray-300 mb-3">주가 차트 (6개월)</div>
-            <StockChart data={company.priceHistory} height={200} showAxis />
+            {histLoading ? (
+              <div className="flex items-center justify-center h-[200px] text-gray-500">
+                <RefreshCw size={18} className="animate-spin mr-2" /> 불러오는 중...
+              </div>
+            ) : (
+              <StockChart data={history} height={200} showAxis />
+            )}
           </div>
 
           <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">

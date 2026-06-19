@@ -6,8 +6,7 @@ import { ShortTermPage } from './pages/ShortTermPage';
 import { LongTermPage } from './pages/LongTermPage';
 import { AnalysisPage } from './pages/AnalysisPage';
 import { CompanyDetail } from './components/CompanyDetail';
-import { longTermStocks, companies } from './data/mockData';
-import { BarChart2, Activity, TrendingUp, LayoutDashboard } from 'lucide-react';
+import { BarChart2, Activity, TrendingUp, LayoutDashboard, RefreshCw, AlertTriangle } from 'lucide-react';
 
 type Tab = 'dashboard' | 'short' | 'long' | 'analysis';
 
@@ -21,7 +20,7 @@ const tabs: { key: Tab; label: string; icon: React.ComponentType<{ size?: number
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
-  const { market, shorts, ticker, lastUpdate } = useRealTimeData();
+  const { market, shorts, longTerms, companies, ticker, lastUpdate, loading, error } = useRealTimeData();
 
   const handleStockClick = (code: string) => {
     const company = companies.find(c => c.code === code);
@@ -32,7 +31,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
-      {/* Header */}
       <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -44,13 +42,23 @@ export default function App() {
               <div className="text-gray-500 text-xs">주식분석 투자플랫폼</div>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            실시간 시세 연동중
+          <div className="flex items-center gap-3 text-xs">
+            {loading ? (
+              <span className="text-gray-400 flex items-center gap-1">
+                <RefreshCw size={12} className="animate-spin" /> 데이터 로딩 중...
+              </span>
+            ) : error ? (
+              <span className="text-red-400 flex items-center gap-1">
+                <AlertTriangle size={12} /> API 오류
+              </span>
+            ) : (
+              <span className="text-gray-400 flex items-center gap-2">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse inline-block" />
+                실시간 시세 · {lastUpdate?.toLocaleTimeString('ko-KR')}
+              </span>
+            )}
           </div>
         </div>
-
-        {/* Nav tabs */}
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex gap-1 overflow-x-auto scrollbar-hide">
             {tabs.map(tab => {
@@ -74,37 +82,40 @@ export default function App() {
         </div>
       </header>
 
-      {/* Ticker */}
       <MarketTicker stocks={ticker} />
 
-      {/* Main content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        {activeTab === 'dashboard' && (
-          <Dashboard
-            market={market}
-            lastUpdate={lastUpdate}
-            topShorts={shorts}
-            onStockClick={handleStockClick}
-            onNavigate={(tab) => setActiveTab(tab as Tab)}
-          />
-        )}
-        {activeTab === 'short' && (
-          <ShortTermPage stocks={shorts} onStockClick={handleStockClick} />
-        )}
-        {activeTab === 'long' && (
-          <LongTermPage stocks={longTermStocks} onStockClick={handleStockClick} />
-        )}
-        {activeTab === 'analysis' && (
-          <AnalysisPage companies={companies} onCompanyClick={handleStockClick} />
-        )}
-      </main>
+      {loading ? (
+        <div className="flex items-center justify-center h-64 text-gray-400">
+          <div className="text-center">
+            <RefreshCw size={32} className="animate-spin mx-auto mb-3" />
+            <div>실시간 주가 데이터 불러오는 중...</div>
+          </div>
+        </div>
+      ) : error ? (
+        <div className="max-w-7xl mx-auto px-4 py-10 text-center text-red-400">
+          <AlertTriangle size={32} className="mx-auto mb-3" />
+          <div>데이터를 불러오지 못했습니다.</div>
+          <div className="text-sm text-gray-500 mt-1">{error}</div>
+        </div>
+      ) : (
+        <main className="max-w-7xl mx-auto px-4 py-6">
+          {activeTab === 'dashboard' && market && (
+            <Dashboard
+              market={market}
+              lastUpdate={lastUpdate!}
+              topShorts={shorts}
+              onStockClick={handleStockClick}
+              onNavigate={(tab) => setActiveTab(tab as Tab)}
+            />
+          )}
+          {activeTab === 'short' && <ShortTermPage stocks={shorts} onStockClick={handleStockClick} />}
+          {activeTab === 'long' && <LongTermPage stocks={longTerms} onStockClick={handleStockClick} />}
+          {activeTab === 'analysis' && <AnalysisPage companies={companies} onCompanyClick={handleStockClick} />}
+        </main>
+      )}
 
-      {/* Company detail modal */}
       {selectedCompanyData && (
-        <CompanyDetail
-          company={selectedCompanyData}
-          onClose={() => setSelectedCompany(null)}
-        />
+        <CompanyDetail company={selectedCompanyData} onClose={() => setSelectedCompany(null)} />
       )}
     </div>
   );
