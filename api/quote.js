@@ -3,9 +3,16 @@ import https from 'https';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
 
 const STOCK_SYMBOLS = [
+  // 기존 16종목
   '005930.KS', '000660.KS', '035420.KS', '051910.KS', '035720.KS',
   '207940.KS', '006400.KS', '028260.KS', '005490.KS', '105560.KS',
   '068270.KS', '003550.KS', '012330.KS', '096770.KS', '018260.KS', '000270.KS',
+  // KOSPI 추가 종목
+  '005380.KS', '055550.KS', '086790.KS', '316140.KS', '030200.KS', '017670.KS',
+  '066570.KS', '009150.KS', '003670.KS', '373220.KS', '042660.KS', '011200.KS',
+  '034730.KS', '000810.KS', '010950.KS', '259960.KS', '352820.KS', '377300.KS',
+  // KOSDAQ 추가 종목
+  '247540.KQ', '086520.KQ', '196170.KQ', '035900.KQ', '041510.KQ', '263750.KQ',
 ];
 
 const INDEX_SYMBOLS = ['^KS11', '^KQ11', '^GSPC', '^IXIC', 'KRW=X'];

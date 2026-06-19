@@ -17,17 +17,37 @@ function bollingerPos(rate: number): 'UPPER' | 'MIDDLE' | 'LOWER' {
   return 'MIDDLE';
 }
 
+function autoShortSignal(q: QuoteData): { signal: 'STRONG_BUY' | 'BUY' | 'WATCH'; strength: number } {
+  const rate = q.regularMarketChangePercent ?? 0;
+  if (rate > 3) return { signal: 'STRONG_BUY', strength: 5 };
+  if (rate > 1.5) return { signal: 'BUY', strength: 4 };
+  if (rate > 0) return { signal: 'BUY', strength: 3 };
+  return { signal: 'WATCH', strength: 2 };
+}
+
+function autoLongRating(q: QuoteData): { consensus: 'STRONG_BUY' | 'BUY' | 'HOLD'; rating: number } {
+  const per = q.trailingPE ?? 0;
+  const pbr = q.priceToBook ?? 0;
+  const hasValue = per > 0 || pbr > 0;
+  if (!hasValue) return { consensus: 'BUY', rating: 3 };
+  if ((per > 0 && per < 12) || (pbr > 0 && pbr < 0.8)) return { consensus: 'STRONG_BUY', rating: 5 };
+  if ((per > 0 && per < 20) || (pbr > 0 && pbr < 1.5)) return { consensus: 'BUY', rating: 4 };
+  if (per > 0 && per < 35) return { consensus: 'BUY', rating: 3 };
+  return { consensus: 'HOLD', rating: 3 };
+}
+
 function mapToShortTerm(q: QuoteData): ShortTermStock | null {
   const code = codeFromSymbol(q.symbol);
   const staticInfo = STOCK_LIST.find((s) => s.code === code);
-  const signal = SHORT_SIGNALS[code];
-  if (!staticInfo || !signal) return null;
+  if (!staticInfo) return null;
+  const signal = SHORT_SIGNALS[code] ?? autoShortSignal(q);
   const meta = COMPANY_META[code];
   const price = q.regularMarketPrice ?? 0;
+  if (price === 0) return null;
   const changeRate = q.regularMarketChangePercent ?? 0;
   return {
     code,
-    name: staticInfo.name,
+    name: meta?.name ?? staticInfo.name,
     price: Math.round(price),
     change: Math.round(q.regularMarketChange ?? 0),
     changeRate: Math.round(changeRate * 100) / 100,
@@ -40,9 +60,9 @@ function mapToShortTerm(q: QuoteData): ShortTermStock | null {
     macd: (q.regularMarketChange ?? 0) * 10,
     bollingerPosition: bollingerPos(changeRate),
     momentum: Math.min(100, Math.max(0, 50 + changeRate * 5)),
-    targetPrice: Math.round(price * (meta?.targetMultiplier ?? 1.1)),
+    targetPrice: Math.round(price * (meta?.targetMultiplier ?? 1.10)),
     stopLoss: Math.round(price * (meta?.stopLossMultiplier ?? 0.96)),
-    reason: meta?.shortReason ?? '기술적 분석 기반 추천',
+    reason: meta?.shortReason ?? '기술적 분석 기반 단기 추천 종목',
     strength: signal.strength,
   };
 }
@@ -50,14 +70,15 @@ function mapToShortTerm(q: QuoteData): ShortTermStock | null {
 function mapToLongTerm(q: QuoteData): LongTermStock | null {
   const code = codeFromSymbol(q.symbol);
   const staticInfo = STOCK_LIST.find((s) => s.code === code);
-  const rating = LONG_RATINGS[code];
-  if (!staticInfo || !rating) return null;
+  if (!staticInfo) return null;
+  const rating = LONG_RATINGS[code] ?? autoLongRating(q);
   const meta = COMPANY_META[code];
   const price = q.regularMarketPrice ?? 0;
-  const targetPrice = Math.round(price * (meta?.analystRatings.upsideTarget ?? 1.2));
+  if (price === 0) return null;
+  const targetPrice = Math.round(price * (meta?.analystRatings.upsideTarget ?? 1.15));
   return {
     code,
-    name: staticInfo.name,
+    name: meta?.name ?? staticInfo.name,
     price: Math.round(price),
     change: Math.round(q.regularMarketChange ?? 0),
     changeRate: Math.round((q.regularMarketChangePercent ?? 0) * 100) / 100,
@@ -69,13 +90,13 @@ function mapToLongTerm(q: QuoteData): LongTermStock | null {
     pbr: q.priceToBook ?? 0,
     roe: meta?.roe ?? 0,
     debtRatio: meta?.debtRatio ?? 0,
-    dividendYield: (q.trailingAnnualDividendYield ?? meta?.dividendYield ?? 0) * 100,
+    dividendYield: (q.trailingAnnualDividendYield ?? (meta?.dividendYield ?? 0) / 100) * 100,
     revenueGrowth: meta?.revenueGrowth ?? 0,
     operatingMargin: meta?.operatingMargin ?? 0,
     targetPrice,
     analystConsensus: rating.consensus,
     upside: Math.round(((targetPrice - price) / price) * 100 * 10) / 10,
-    reason: meta?.longReason ?? '펀더멘털 분석 기반 추천',
+    reason: meta?.longReason ?? '펀더멘털 기반 중장기 투자 추천 종목',
     rating: rating.rating,
   };
 }

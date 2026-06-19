@@ -316,6 +316,32 @@ export const STOCK_LIST: { code: string; yahooSymbol: string; name: string; sect
   { code: '096770', yahooSymbol: '096770.KS', name: 'SK이노베이션', sector: '에너지', market: 'KOSPI' },
   { code: '018260', yahooSymbol: '018260.KS', name: '삼성에스디에스', sector: 'IT서비스', market: 'KOSPI' },
   { code: '000270', yahooSymbol: '000270.KS', name: '기아', sector: '자동차', market: 'KOSPI' },
+  // KOSPI 상위 추가 종목
+  { code: '005380', yahooSymbol: '005380.KS', name: '현대차', sector: '자동차', market: 'KOSPI' },
+  { code: '055550', yahooSymbol: '055550.KS', name: '신한지주', sector: '금융', market: 'KOSPI' },
+  { code: '086790', yahooSymbol: '086790.KS', name: '하나금융지주', sector: '금융', market: 'KOSPI' },
+  { code: '316140', yahooSymbol: '316140.KS', name: '우리금융지주', sector: '금융', market: 'KOSPI' },
+  { code: '030200', yahooSymbol: '030200.KS', name: 'KT', sector: '통신', market: 'KOSPI' },
+  { code: '017670', yahooSymbol: '017670.KS', name: 'SK텔레콤', sector: '통신', market: 'KOSPI' },
+  { code: '066570', yahooSymbol: '066570.KS', name: 'LG전자', sector: '전자', market: 'KOSPI' },
+  { code: '009150', yahooSymbol: '009150.KS', name: '삼성전기', sector: '반도체', market: 'KOSPI' },
+  { code: '003670', yahooSymbol: '003670.KS', name: '포스코퓨처엠', sector: '2차전지', market: 'KOSPI' },
+  { code: '373220', yahooSymbol: '373220.KS', name: 'LG에너지솔루션', sector: '2차전지', market: 'KOSPI' },
+  { code: '042660', yahooSymbol: '042660.KS', name: '한화오션', sector: '조선', market: 'KOSPI' },
+  { code: '011200', yahooSymbol: '011200.KS', name: 'HMM', sector: '해운', market: 'KOSPI' },
+  { code: '034730', yahooSymbol: '034730.KS', name: 'SK', sector: '지주회사', market: 'KOSPI' },
+  { code: '000810', yahooSymbol: '000810.KS', name: '삼성화재', sector: '금융', market: 'KOSPI' },
+  { code: '010950', yahooSymbol: '010950.KS', name: 'S-Oil', sector: '에너지', market: 'KOSPI' },
+  { code: '259960', yahooSymbol: '259960.KS', name: '크래프톤', sector: '게임', market: 'KOSPI' },
+  { code: '352820', yahooSymbol: '352820.KS', name: '하이브', sector: '엔터', market: 'KOSPI' },
+  { code: '377300', yahooSymbol: '377300.KS', name: '카카오페이', sector: '핀테크', market: 'KOSPI' },
+  // KOSDAQ 상위 종목
+  { code: '247540', yahooSymbol: '247540.KQ', name: '에코프로비엠', sector: '2차전지', market: 'KOSDAQ' },
+  { code: '086520', yahooSymbol: '086520.KQ', name: '에코프로', sector: '2차전지', market: 'KOSDAQ' },
+  { code: '196170', yahooSymbol: '196170.KQ', name: '알테오젠', sector: '바이오', market: 'KOSDAQ' },
+  { code: '035900', yahooSymbol: '035900.KQ', name: 'JYP엔터테인먼트', sector: '엔터', market: 'KOSDAQ' },
+  { code: '041510', yahooSymbol: '041510.KQ', name: '에스엠', sector: '엔터', market: 'KOSDAQ' },
+  { code: '263750', yahooSymbol: '263750.KQ', name: '펄어비스', sector: '게임', market: 'KOSDAQ' },
 ];
 
 export const INDEX_LIST = [
