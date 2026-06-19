@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, X, RefreshCw } from 'lucide-react';
 import { searchStocks } from '../services/api';
 import type { SearchResult } from '../services/api';
+import { getFullStockList, searchLocalStocks } from '../services/stockCache';
 
 interface Props {
   onSelectStock: (symbol: string, name: string) => void;
@@ -15,15 +16,33 @@ export function SearchBar({ onSelectStock }: Props) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Pre-warm the stock list cache on mount
+  useEffect(() => { getFullStockList(); }, []);
+
   useEffect(() => {
     if (!query.trim()) { setResults([]); setLoading(false); return; }
     setLoading(true);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(async () => {
+      // Stage 1: instant local search from full KRX stock list
+      const allStocks = await getFullStockList();
+      const localHits = searchLocalStocks(query, allStocks, 30);
+      if (localHits.length > 0) {
+        setResults(localHits.map(s => ({
+          symbol: `${s.code}.${s.market === 'KOSPI' ? 'KS' : 'KQ'}`,
+          shortname: s.name,
+          exchDisp: s.market,
+          sector: s.sector,
+          isKorean: true,
+        })));
+        setLoading(false);
+        return;
+      }
+      // Stage 2: fall back to Yahoo Finance for global / non-KRX stocks
       const data = await searchStocks(query);
       setResults(data);
       setLoading(false);
-    }, 350);
+    }, 300);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [query]);
 
