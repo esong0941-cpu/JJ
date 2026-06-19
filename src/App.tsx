@@ -5,18 +5,20 @@ import { Dashboard } from './pages/Dashboard';
 import { ShortTermPage } from './pages/ShortTermPage';
 import { LongTermPage } from './pages/LongTermPage';
 import { AnalysisPage } from './pages/AnalysisPage';
+import { StockBrowserPage } from './pages/StockBrowserPage';
 import { CompanyDetail } from './components/CompanyDetail';
 import { SearchBar } from './components/SearchBar';
 import { SearchedStockDetail } from './components/SearchedStockDetail';
-import { BarChart2, Activity, TrendingUp, LayoutDashboard, RefreshCw, AlertTriangle } from 'lucide-react';
+import { BarChart2, Activity, TrendingUp, LayoutDashboard, List, RefreshCw, AlertTriangle } from 'lucide-react';
 
-type Tab = 'dashboard' | 'short' | 'long' | 'analysis';
+type Tab = 'dashboard' | 'short' | 'long' | 'analysis' | 'browse';
 
 const tabs: { key: Tab; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
   { key: 'dashboard', label: '대시보드', icon: LayoutDashboard },
   { key: 'short', label: '단타종목', icon: Activity },
   { key: 'long', label: '장타종목', icon: TrendingUp },
   { key: 'analysis', label: '기업분석', icon: BarChart2 },
+  { key: 'browse', label: '전체종목', icon: List },
 ];
 
 export default function App() {
@@ -31,7 +33,17 @@ export default function App() {
   };
 
   const handleSearchSelect = (symbol: string, name: string) => {
-    // If it's one of our curated stocks, open CompanyDetail; otherwise SearchedStockDetail
+    const code = symbol.replace(/\.(KS|KQ)$/i, '');
+    const company = companies.find(c => c.code === code);
+    if (company) {
+      setSelectedCompany(code);
+    } else {
+      setSearchedStock({ symbol, name });
+    }
+  };
+
+  // Used by StockBrowserPage: symbol is already in Yahoo format (e.g. 005930.KS)
+  const handleBrowseClick = (symbol: string, name: string) => {
     const code = symbol.replace(/\.(KS|KQ)$/i, '');
     const company = companies.find(c => c.code === code);
     if (company) {
@@ -57,7 +69,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Search bar - center */}
           <div className="flex-1 max-w-sm">
             <SearchBar onSelectStock={handleSearchSelect} />
           </div>
@@ -69,7 +80,7 @@ export default function App() {
               </span>
             ) : error ? (
               <span className="text-red-400 flex items-center gap-1">
-                <AlertTriangle size={12} /> API 오류
+                <AlertTriangle size={12} /> 오류
               </span>
             ) : (
               <span className="text-gray-400 hidden sm:flex items-center gap-2">
@@ -111,7 +122,7 @@ export default function App() {
             <div>실시간 주가 데이터 불러오는 중...</div>
           </div>
         </div>
-      ) : error ? (
+      ) : error && activeTab !== 'browse' ? (
         <div className="max-w-7xl mx-auto px-4 py-10 text-center text-red-400">
           <AlertTriangle size={32} className="mx-auto mb-3" />
           <div>데이터를 불러오지 못했습니다.</div>
@@ -131,6 +142,7 @@ export default function App() {
           {activeTab === 'short' && <ShortTermPage stocks={shorts} onStockClick={handleStockClick} />}
           {activeTab === 'long' && <LongTermPage stocks={longTerms} onStockClick={handleStockClick} />}
           {activeTab === 'analysis' && <AnalysisPage companies={companies} onCompanyClick={handleStockClick} />}
+          {activeTab === 'browse' && <StockBrowserPage onStockClick={handleBrowseClick} />}
         </main>
       )}
 
