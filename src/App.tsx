@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { useRealTimeData } from './hooks/useRealTimeData';
+import { useWatchlist } from './hooks/useWatchlist';
 import { MarketTicker } from './components/MarketTicker';
 import { Dashboard } from './pages/Dashboard';
 import { ShortTermPage } from './pages/ShortTermPage';
 import { LongTermPage } from './pages/LongTermPage';
 import { AnalysisPage } from './pages/AnalysisPage';
 import { StockBrowserPage } from './pages/StockBrowserPage';
+import { WatchlistPage } from './pages/WatchlistPage';
 import { CompanyDetail } from './components/CompanyDetail';
 import { SearchBar } from './components/SearchBar';
 import { SearchedStockDetail } from './components/SearchedStockDetail';
-import { BarChart2, Activity, TrendingUp, LayoutDashboard, List, RefreshCw, AlertTriangle } from 'lucide-react';
+import { BarChart2, Activity, TrendingUp, LayoutDashboard, List, Star, RefreshCw, AlertTriangle } from 'lucide-react';
 
-type Tab = 'dashboard' | 'short' | 'long' | 'analysis' | 'browse';
+type Tab = 'dashboard' | 'short' | 'long' | 'analysis' | 'browse' | 'watchlist';
 
 const tabs: { key: Tab; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
   { key: 'dashboard', label: '대시보드', icon: LayoutDashboard },
@@ -19,6 +21,7 @@ const tabs: { key: Tab; label: string; icon: React.ComponentType<{ size?: number
   { key: 'long', label: '장타종목', icon: TrendingUp },
   { key: 'analysis', label: '기업분석', icon: BarChart2 },
   { key: 'browse', label: '전체종목', icon: List },
+  { key: 'watchlist', label: '관심종목', icon: Star },
 ];
 
 export default function App() {
@@ -26,31 +29,27 @@ export default function App() {
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [searchedStock, setSearchedStock] = useState<{ symbol: string; name: string } | null>(null);
   const { market, shorts, longTerms, companies, ticker, lastUpdate, loading, error } = useRealTimeData();
+  const { watchlist, toggle, isWatched } = useWatchlist();
 
-  const handleStockClick = (code: string) => {
+  const openStock = (code: string, symbol?: string, name?: string) => {
     const company = companies.find(c => c.code === code);
-    if (company) setSelectedCompany(code);
+    if (company) {
+      setSelectedCompany(code);
+    } else if (symbol) {
+      setSearchedStock({ symbol, name: name ?? code });
+    }
   };
+
+  const handleStockClick = (code: string) => openStock(code);
 
   const handleSearchSelect = (symbol: string, name: string) => {
     const code = symbol.replace(/\.(KS|KQ)$/i, '');
-    const company = companies.find(c => c.code === code);
-    if (company) {
-      setSelectedCompany(code);
-    } else {
-      setSearchedStock({ symbol, name });
-    }
+    openStock(code, symbol, name);
   };
 
-  // Used by StockBrowserPage: symbol is already in Yahoo format (e.g. 005930.KS)
   const handleBrowseClick = (symbol: string, name: string) => {
     const code = symbol.replace(/\.(KS|KQ)$/i, '');
-    const company = companies.find(c => c.code === code);
-    if (company) {
-      setSelectedCompany(code);
-    } else {
-      setSearchedStock({ symbol, name });
-    }
+    openStock(code, symbol, name);
   };
 
   const selectedCompanyData = selectedCompany ? companies.find(c => c.code === selectedCompany) : null;
@@ -106,6 +105,11 @@ export default function App() {
                 >
                   <Icon size={15} />
                   {tab.label}
+                  {tab.key === 'watchlist' && watchlist.size > 0 && (
+                    <span className="bg-yellow-500 text-black text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold leading-none">
+                      {watchlist.size}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -122,7 +126,7 @@ export default function App() {
             <div>실시간 주가 데이터 불러오는 중...</div>
           </div>
         </div>
-      ) : error && activeTab !== 'browse' ? (
+      ) : error && activeTab !== 'browse' && activeTab !== 'watchlist' ? (
         <div className="max-w-7xl mx-auto px-4 py-10 text-center text-red-400">
           <AlertTriangle size={32} className="mx-auto mb-3" />
           <div>데이터를 불러오지 못했습니다.</div>
@@ -141,10 +145,23 @@ export default function App() {
               onNavigate={(tab) => setActiveTab(tab as Tab)}
             />
           )}
-          {activeTab === 'short' && <ShortTermPage stocks={shorts} onStockClick={handleStockClick} />}
-          {activeTab === 'long' && <LongTermPage stocks={longTerms} onStockClick={handleStockClick} />}
+          {activeTab === 'short' && (
+            <ShortTermPage stocks={shorts} onStockClick={handleStockClick} isWatched={isWatched} onToggleWatch={toggle} />
+          )}
+          {activeTab === 'long' && (
+            <LongTermPage stocks={longTerms} onStockClick={handleStockClick} isWatched={isWatched} onToggleWatch={toggle} />
+          )}
           {activeTab === 'analysis' && <AnalysisPage companies={companies} onCompanyClick={handleStockClick} />}
-          {activeTab === 'browse' && <StockBrowserPage onStockClick={handleBrowseClick} />}
+          {activeTab === 'browse' && (
+            <StockBrowserPage onStockClick={handleBrowseClick} isWatched={isWatched} onToggleWatch={toggle} />
+          )}
+          {activeTab === 'watchlist' && (
+            <WatchlistPage
+              watchlist={watchlist}
+              onStockClick={handleBrowseClick}
+              onToggleWatch={toggle}
+            />
+          )}
         </main>
       )}
 

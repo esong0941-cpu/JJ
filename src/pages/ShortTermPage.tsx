@@ -6,12 +6,14 @@ import { Filter } from 'lucide-react';
 interface Props {
   stocks: ShortTermStock[];
   onStockClick: (code: string) => void;
+  isWatched?: (code: string) => boolean;
+  onToggleWatch?: (code: string) => void;
 }
 
 type SignalFilter = 'ALL' | 'STRONG_BUY' | 'BUY' | 'WATCH';
 type SortOption = 'strength' | 'upside' | 'changeRate' | 'volume';
 
-export function ShortTermPage({ stocks, onStockClick }: Props) {
+export function ShortTermPage({ stocks, onStockClick, isWatched, onToggleWatch }: Props) {
   const [signalFilter, setSignalFilter] = useState<SignalFilter>('ALL');
   const [sort, setSort] = useState<SortOption>('strength');
 
@@ -82,7 +84,13 @@ export function ShortTermPage({ stocks, onStockClick }: Props) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filtered.map(s => (
-          <ShortTermCard key={s.code} stock={s} onClick={() => onStockClick(s.code)} />
+          <ShortTermCard
+            key={s.code}
+            stock={s}
+            onClick={() => onStockClick(s.code)}
+            isWatched={isWatched?.(s.code)}
+            onToggleWatch={onToggleWatch}
+          />
         ))}
       </div>
     </div>

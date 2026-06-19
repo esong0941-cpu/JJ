@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { RefreshCw, TrendingUp, TrendingDown, Search } from 'lucide-react';
+import { RefreshCw, TrendingUp, TrendingDown, Search, Star } from 'lucide-react';
 import { formatNumber } from '../components/PriceTag';
 import { ALL_STOCKS as STATIC_STOCKS } from '../data/allStocks';
 
@@ -24,11 +24,13 @@ interface LiveQuote {
 
 interface Props {
   onStockClick: (symbol: string, name: string) => void;
+  isWatched?: (code: string) => boolean;
+  onToggleWatch?: (code: string) => void;
 }
 
 const PAGE_SIZE = 50;
 
-export function StockBrowserPage({ onStockClick }: Props) {
+export function StockBrowserPage({ onStockClick, isWatched, onToggleWatch }: Props) {
   const [allStocks, setAllStocks] = useState<StockEntry[]>([]);
   const [sectors, setSectors] = useState<string[]>([]);
   const [activeSector, setActiveSector] = useState<string>('');
@@ -233,43 +235,62 @@ export function StockBrowserPage({ onStockClick }: Props) {
           const symbol = `${stock.code}.${stock.market === 'KOSPI' ? 'KS' : 'KQ'}`;
           const q = quotes[symbol];
           const up = (q?.regularMarketChangePercent ?? 0) >= 0;
+          const watched = isWatched?.(stock.code);
 
           return (
-            <button
+            <div
               key={stock.code}
-              onClick={() => onStockClick(symbol, q?.shortName || stock.name)}
-              className="bg-gray-800 border border-gray-700 rounded-xl p-4 text-left hover:border-yellow-500/40 hover:bg-gray-750 transition-all group"
+              className="bg-gray-800 border border-gray-700 rounded-xl p-4 hover:border-yellow-500/40 transition-all group relative"
             >
-              <div className="flex items-start justify-between mb-2">
+              <button
+                className="absolute inset-0 w-full h-full"
+                onClick={() => {
+                  localStorage.setItem('jj_market_' + stock.code, stock.market);
+                  onStockClick(symbol, q?.shortName || stock.name);
+                }}
+              />
+              <div className="relative flex items-start justify-between mb-2">
                 <div>
                   <div className="text-white font-medium text-sm group-hover:text-yellow-400 transition-colors">
                     {stock.name}
                   </div>
                   <div className="text-gray-500 text-xs mt-0.5">{stock.code} · {stock.market}</div>
                 </div>
-                {q ? (
-                  <div className={`text-right ${up ? 'text-red-400' : 'text-blue-400'}`}>
-                    <div className="text-sm font-bold">{q.regularMarketPrice.toLocaleString()}원</div>
-                    <div className="text-xs flex items-center gap-1 justify-end">
-                      {up ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-                      {up ? '+' : ''}{q.regularMarketChangePercent.toFixed(2)}%
+                <div className="flex items-start gap-2">
+                  {q ? (
+                    <div className={`text-right ${up ? 'text-red-400' : 'text-blue-400'}`}>
+                      <div className="text-sm font-bold">{q.regularMarketPrice.toLocaleString()}원</div>
+                      <div className="text-xs flex items-center gap-1 justify-end">
+                        {up ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                        {up ? '+' : ''}{q.regularMarketChangePercent.toFixed(2)}%
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-gray-600 text-xs">
-                    {loadingQuotes ? <RefreshCw size={12} className="animate-spin" /> : '-'}
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-gray-600 text-xs">
+                      {loadingQuotes ? <RefreshCw size={12} className="animate-spin" /> : '-'}
+                    </div>
+                  )}
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      localStorage.setItem('jj_market_' + stock.code, stock.market);
+                      onToggleWatch?.(stock.code);
+                    }}
+                    className={`transition-colors mt-0.5 z-10 relative ${watched ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400'}`}
+                  >
+                    <Star size={14} fill={watched ? 'currentColor' : 'none'} />
+                  </button>
+                </div>
               </div>
 
               {q && (
-                <div className="flex gap-3 text-xs text-gray-500 border-t border-gray-700/50 pt-2 mt-2">
+                <div className="relative flex gap-3 text-xs text-gray-500 border-t border-gray-700/50 pt-2 mt-2">
                   <span>시총 {formatNumber(q.marketCap)}원</span>
                   {q.trailingPE && <span>PER {q.trailingPE.toFixed(1)}</span>}
                   {q.priceToBook && <span>PBR {q.priceToBook.toFixed(2)}</span>}
                 </div>
               )}
-            </button>
+            </div>
           );
         })}
       </div>

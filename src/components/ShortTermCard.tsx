@@ -1,9 +1,11 @@
 import type { ShortTermStock } from '../types/stock';
-import { TrendingUp, TrendingDown, Eye, Zap } from 'lucide-react';
+import { TrendingUp, TrendingDown, Eye, Zap, Star } from 'lucide-react';
 
 interface Props {
   stock: ShortTermStock;
   onClick: () => void;
+  isWatched?: boolean;
+  onToggleWatch?: (code: string) => void;
 }
 
 const signalConfig = {
@@ -15,10 +17,11 @@ const signalConfig = {
 
 const bollingerLabel = { UPPER: '상단', MIDDLE: '중단', LOWER: '하단' };
 
-export function ShortTermCard({ stock, onClick }: Props) {
+export function ShortTermCard({ stock, onClick, isWatched, onToggleWatch }: Props) {
   const cfg = signalConfig[stock.signal];
   const Icon = cfg.icon;
   const upside = ((stock.targetPrice - stock.price) / stock.price * 100).toFixed(1);
+  const watched = isWatched ?? false;
 
   return (
     <div
@@ -37,7 +40,13 @@ export function ShortTermCard({ stock, onClick }: Props) {
           <div className="text-white font-bold text-lg">{stock.name}</div>
           <div className="text-gray-400 text-xs">{stock.code}</div>
         </div>
-        <div className="text-right">
+        <div className="flex flex-col items-end gap-1">
+          <button
+            onClick={e => { e.stopPropagation(); onToggleWatch?.(stock.code); }}
+            className={`transition-colors ${watched ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400'}`}
+          >
+            <Star size={15} fill={watched ? 'currentColor' : 'none'} />
+          </button>
           <div className="text-white font-bold text-lg">{stock.price.toLocaleString()}원</div>
           <div className={`text-sm ${stock.changeRate > 0 ? 'text-red-400' : 'text-blue-400'}`}>
             {stock.changeRate > 0 ? '▲' : '▼'} {Math.abs(stock.changeRate).toFixed(2)}%

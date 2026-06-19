@@ -5,11 +5,13 @@ import { LongTermCard } from '../components/LongTermCard';
 interface Props {
   stocks: LongTermStock[];
   onStockClick: (code: string) => void;
+  isWatched?: (code: string) => boolean;
+  onToggleWatch?: (code: string) => void;
 }
 
 type SortOption = 'rating' | 'upside' | 'dividendYield' | 'roe';
 
-export function LongTermPage({ stocks, onStockClick }: Props) {
+export function LongTermPage({ stocks, onStockClick, isWatched, onToggleWatch }: Props) {
   const [sort, setSort] = useState<SortOption>('rating');
   const [sector, setSector] = useState('전체');
 
@@ -72,7 +74,13 @@ export function LongTermPage({ stocks, onStockClick }: Props) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filtered.map(s => (
-          <LongTermCard key={s.code} stock={s} onClick={() => onStockClick(s.code)} />
+          <LongTermCard
+            key={s.code}
+            stock={s}
+            onClick={() => onStockClick(s.code)}
+            isWatched={isWatched?.(s.code)}
+            onToggleWatch={onToggleWatch}
+          />
         ))}
       </div>
     </div>

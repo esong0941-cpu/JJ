@@ -4,6 +4,8 @@ import { Star, TrendingUp } from 'lucide-react';
 interface Props {
   stock: LongTermStock;
   onClick: () => void;
+  isWatched?: boolean;
+  onToggleWatch?: (code: string) => void;
 }
 
 const consensusConfig = {
@@ -32,8 +34,9 @@ function MetricBar({ label, value, benchmark, positive = true }: MetricBarProps)
   );
 }
 
-export function LongTermCard({ stock, onClick }: Props) {
+export function LongTermCard({ stock, onClick, isWatched, onToggleWatch }: Props) {
   const cfg = consensusConfig[stock.analystConsensus];
+  const watched = isWatched;
 
   return (
     <div
@@ -52,6 +55,12 @@ export function LongTermCard({ stock, onClick }: Props) {
           <div className="text-gray-500 text-xs">{stock.code} · {stock.market}</div>
         </div>
         <div className="text-right">
+          <button
+            onClick={e => { e.stopPropagation(); onToggleWatch?.(stock.code); }}
+            className={`mb-1 transition-colors float-right ml-2 ${watched ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400'}`}
+          >
+            <Star size={15} fill={watched ? 'currentColor' : 'none'} />
+          </button>
           <div className="text-white font-bold">{stock.price.toLocaleString()}원</div>
           <div className={`text-sm ${stock.changeRate > 0 ? 'text-red-400' : 'text-blue-400'}`}>
             {stock.changeRate > 0 ? '▲' : '▼'} {Math.abs(stock.changeRate).toFixed(2)}%
