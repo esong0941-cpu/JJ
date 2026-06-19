@@ -6,6 +6,8 @@ import { ShortTermPage } from './pages/ShortTermPage';
 import { LongTermPage } from './pages/LongTermPage';
 import { AnalysisPage } from './pages/AnalysisPage';
 import { CompanyDetail } from './components/CompanyDetail';
+import { SearchBar } from './components/SearchBar';
+import { SearchedStockDetail } from './components/SearchedStockDetail';
 import { BarChart2, Activity, TrendingUp, LayoutDashboard, RefreshCw, AlertTriangle } from 'lucide-react';
 
 type Tab = 'dashboard' | 'short' | 'long' | 'analysis';
@@ -20,6 +22,7 @@ const tabs: { key: Tab; label: string; icon: React.ComponentType<{ size?: number
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
+  const [searchedStock, setSearchedStock] = useState<{ symbol: string; name: string } | null>(null);
   const { market, shorts, longTerms, companies, ticker, lastUpdate, loading, error } = useRealTimeData();
 
   const handleStockClick = (code: string) => {
@@ -27,34 +30,51 @@ export default function App() {
     if (company) setSelectedCompany(code);
   };
 
+  const handleSearchSelect = (symbol: string, name: string) => {
+    // If it's one of our curated stocks, open CompanyDetail; otherwise SearchedStockDetail
+    const code = symbol.replace(/\.(KS|KQ)$/i, '');
+    const company = companies.find(c => c.code === code);
+    if (company) {
+      setSelectedCompany(code);
+    } else {
+      setSearchedStock({ symbol, name });
+    }
+  };
+
   const selectedCompanyData = selectedCompany ? companies.find(c => c.code === selectedCompany) : null;
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
       <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 shrink-0">
             <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
               <TrendingUp size={18} className="text-black" />
             </div>
-            <div>
+            <div className="hidden sm:block">
               <div className="text-white font-bold text-lg leading-none">StockVision</div>
               <div className="text-gray-500 text-xs">주식분석 투자플랫폼</div>
             </div>
           </div>
-          <div className="flex items-center gap-3 text-xs">
+
+          {/* Search bar - center */}
+          <div className="flex-1 max-w-sm">
+            <SearchBar onSelectStock={handleSearchSelect} />
+          </div>
+
+          <div className="flex items-center gap-3 text-xs shrink-0">
             {loading ? (
               <span className="text-gray-400 flex items-center gap-1">
-                <RefreshCw size={12} className="animate-spin" /> 데이터 로딩 중...
+                <RefreshCw size={12} className="animate-spin" /> 로딩 중...
               </span>
             ) : error ? (
               <span className="text-red-400 flex items-center gap-1">
                 <AlertTriangle size={12} /> API 오류
               </span>
             ) : (
-              <span className="text-gray-400 flex items-center gap-2">
+              <span className="text-gray-400 hidden sm:flex items-center gap-2">
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse inline-block" />
-                실시간 시세 · {lastUpdate?.toLocaleTimeString('ko-KR')}
+                {lastUpdate?.toLocaleTimeString('ko-KR')}
               </span>
             )}
           </div>
@@ -116,6 +136,14 @@ export default function App() {
 
       {selectedCompanyData && (
         <CompanyDetail company={selectedCompanyData} onClose={() => setSelectedCompany(null)} />
+      )}
+
+      {searchedStock && (
+        <SearchedStockDetail
+          symbol={searchedStock.symbol}
+          name={searchedStock.name}
+          onClose={() => setSearchedStock(null)}
+        />
       )}
     </div>
   );

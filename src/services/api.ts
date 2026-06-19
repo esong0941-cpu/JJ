@@ -38,3 +38,41 @@ export async function fetchHistory(symbol: string, range = '6mo'): Promise<Histo
   const data = await res.json();
   return data.history ?? [];
 }
+
+export interface SearchResult {
+  symbol: string;
+  shortname: string;
+  exchDisp: string;
+  sector: string;
+  isKorean: boolean;
+}
+
+export async function searchStocks(q: string): Promise<SearchResult[]> {
+  const res = await fetch(`${BASE}/api/search?q=${encodeURIComponent(q)}`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.results ?? [];
+}
+
+export interface StockQuote {
+  symbol: string;
+  shortName: string;
+  regularMarketPrice: number;
+  regularMarketChange: number;
+  regularMarketChangePercent: number;
+  regularMarketVolume: number;
+  marketCap: number;
+  trailingPE: number | null;
+  priceToBook: number | null;
+  trailingAnnualDividendYield: number | null;
+  fiftyTwoWeekHigh: number | null;
+  fiftyTwoWeekLow: number | null;
+  currency: string;
+  exchangeName: string;
+}
+
+export async function fetchStockInfo(symbol: string): Promise<StockQuote> {
+  const res = await fetch(`${BASE}/api/stock?symbol=${encodeURIComponent(symbol)}`);
+  if (!res.ok) throw new Error(`Stock API ${res.status}`);
+  return res.json();
+}
