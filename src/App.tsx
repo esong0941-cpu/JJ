@@ -135,6 +135,8 @@ export default function App() {
               market={market}
               lastUpdate={lastUpdate!}
               topShorts={shorts}
+              longTerms={longTerms}
+              companies={companies}
               onStockClick={handleStockClick}
               onNavigate={(tab) => setActiveTab(tab as Tab)}
             />

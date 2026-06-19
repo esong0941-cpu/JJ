@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { RefreshCw, TrendingUp, TrendingDown, Search } from 'lucide-react';
 import { formatNumber } from '../components/PriceTag';
+import { ALL_STOCKS as STATIC_STOCKS } from '../data/allStocks';
 
 interface StockEntry {
   code: string;
@@ -46,22 +47,31 @@ export function StockBrowserPage({ onStockClick }: Props) {
       try {
         const res = await fetch('/api/stocklist');
         const data = await res.json();
-        if (data.stocks && data.stocks.length > 0) {
-          const stocks: StockEntry[] = data.stocks;
-          setAllStocks(stocks);
-          // Build unique sector list sorted by count
-          const sectorCount: Record<string, number> = {};
-          for (const s of stocks) {
-            sectorCount[s.sector] = (sectorCount[s.sector] ?? 0) + 1;
-          }
-          const sortedSectors = Object.entries(sectorCount)
-            .sort((a, b) => b[1] - a[1])
-            .map(([s]) => s);
-          setSectors(sortedSectors);
-          setActiveSector(sortedSectors[0] ?? '');
+        const stocks: StockEntry[] = (data.stocks && data.stocks.length > 100)
+          ? data.stocks
+          : STATIC_STOCKS;
+        setAllStocks(stocks);
+        const sectorCount: Record<string, number> = {};
+        for (const s of stocks) {
+          sectorCount[s.sector] = (sectorCount[s.sector] ?? 0) + 1;
         }
+        const sortedSectors = Object.entries(sectorCount)
+          .sort((a, b) => b[1] - a[1])
+          .map(([s]) => s);
+        setSectors(sortedSectors);
+        setActiveSector(sortedSectors[0] ?? '');
       } catch (_) {
-        // fallback: empty
+        // use static fallback
+        setAllStocks(STATIC_STOCKS);
+        const sectorCount: Record<string, number> = {};
+        for (const s of STATIC_STOCKS) {
+          sectorCount[s.sector] = (sectorCount[s.sector] ?? 0) + 1;
+        }
+        const sortedSectors = Object.entries(sectorCount)
+          .sort((a, b) => b[1] - a[1])
+          .map(([s]) => s);
+        setSectors(sortedSectors);
+        setActiveSector(sortedSectors[0] ?? '');
       } finally {
         setLoadingList(false);
       }

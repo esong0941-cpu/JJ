@@ -45,11 +45,12 @@ export function AnalysisPage({ companies, onCompanyClick }: Props) {
   useEffect(() => {
     if (!company) return;
     setHistLoading(true);
-    fetchHistory(`${company.code}.KS`)
+    const suffix = company.market === 'KOSDAQ' ? '.KQ' : '.KS';
+    fetchHistory(`${company.code}${suffix}`)
       .then(setHistory)
       .catch(() => setHistory([]))
       .finally(() => setHistLoading(false));
-  }, [company?.code]);
+  }, [company?.code, company?.market]);
 
   if (!company) return null;
 

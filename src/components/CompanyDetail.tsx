@@ -18,11 +18,12 @@ export function CompanyDetail({ company, onClose }: Props) {
 
   useEffect(() => {
     setHistLoading(true);
-    fetchHistory(`${company.code}.KS`)
+    const suffix = company.market === 'KOSDAQ' ? '.KQ' : '.KS';
+    fetchHistory(`${company.code}${suffix}`)
       .then(setHistory)
       .catch(() => {})
       .finally(() => setHistLoading(false));
-  }, [company.code]);
+  }, [company.code, company.market]);
 
   const totalAnalysts = company.analystRatings.strongBuy + company.analystRatings.buy + company.analystRatings.hold + company.analystRatings.sell;
 
