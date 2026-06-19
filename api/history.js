@@ -1,4 +1,4 @@
-const https = require('https');
+import https from 'https';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
 
@@ -25,7 +25,7 @@ function getDays(range) {
   return { '1mo': 30, '3mo': 90, '6mo': 180, '1y': 365 }[range] || 180;
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
 
@@ -64,4 +64,4 @@ module.exports = async function handler(req, res) {
     console.error('history error:', err.message);
     res.status(502).json({ error: err.message, history: [] });
   }
-};
+}

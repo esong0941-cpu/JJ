@@ -1,4 +1,4 @@
-const https = require('https');
+import https from 'https';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
 
@@ -35,12 +35,11 @@ async function fetchSymbol(symbol) {
     `https://query1.finance.yahoo.com/v8/finance/chart/${encoded}?range=1d&interval=1m&includePrePost=false`
   );
 
-  if (status !== 200) throw new Error(`HTTP ${status} for ${symbol}`);
+  if (status !== 200) throw new Error(`HTTP ${status}`);
 
   const json = JSON.parse(body);
   const meta = json?.chart?.result?.[0]?.meta;
-
-  if (!meta || !meta.regularMarketPrice) throw new Error(`no price for ${symbol}`);
+  if (!meta?.regularMarketPrice) throw new Error('no price data');
 
   return {
     symbol,
@@ -57,7 +56,7 @@ async function fetchSymbol(symbol) {
   };
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 's-maxage=15, stale-while-revalidate=60');
 
@@ -82,4 +81,4 @@ module.exports = async function handler(req, res) {
   }
 
   res.json({ stocks, indices, timestamp: Date.now() });
-};
+}
