@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_description">Media Air Remote가 홈/뒤로/방향키 같은 리모컨 동작을 이 기기의 현재 화면에 전달할 수 있도록 합니다. 화면 내용을 수집하거나 외부로 전송하지 않습니다.</string>
+</resources>
